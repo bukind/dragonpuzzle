@@ -1,18 +1,23 @@
 package dragonpuzzle
 
-// sockets
+import (
+	"fmt"
+)
+
+// Side colors
 const (
-	ANYS = iota  // does not matter
-	NONE
-	REDH
-	REDT
-	YELH
-	YELT
-	GRNH
-	GRNT
+	AC = iota  // any color, match anything
+	NC         // no color, match only itself
+	RH         // red head
+	RT
+	YH
+	YT
+	GH
+	GT
 	MAXX
 )
 
+// Directions
 const (
 	N = iota
 	E
@@ -20,6 +25,7 @@ const (
 	S
 )
 
+// internal bits
 const (
 	banys = 1 << iota
 	bnone
@@ -31,60 +37,84 @@ const (
 	bgrnt
 )
 
-type Sock byte
+// Side is the state of the side of the block
+type Side byte
 
 var bits = [...]byte {
 	banys, bnone, bredh, bredt, byelh, byelt, bgrnh, bgrnt,
 }
 
 var sockNames = [...]string{
-	"ANYS", "NONE", "REDH", "REDT", "YELH", "YELT", "GRNH", "GRNT",
+	"AC", "NC", "RH", "RT", "YH", "YT", "GH", "GT",
 }
 
-var masks = map[Sock]byte {
-	ANYS: banys | bnone | bredh | bredt | byelh | byelt | bgrnh | bgrnt,
-	NONE: banys | bnone,
-	REDH: banys | bredt,
-	REDT: banys | bredh,
-	YELH: banys | byelt,
-	YELT: banys | byelh,
-	GRNH: banys | bgrnt,
-	GRNT: banys | bgrnh,
+var masks = map[Side]byte {
+	AC: banys | bnone | bredh | bredt | byelh | byelt | bgrnh | bgrnt,
+	NC: banys | bnone,
+	RH: banys | bredt,
+	RT: banys | bredh,
+	YH: banys | byelt,
+	YT: banys | byelh,
+	GH: banys | bgrnt,
+	GT: banys | bgrnh,
 }
 
-//            0      1      2     3
-// block is (north, east, west, south)
-type Block struct {
-	Sock [4]Sock
-}
-
-func (s Sock) String() string {
+// String is the string representation of Side.
+func (s Side) String() string {
 	return sockNames[s]
 }
 
-func (s Sock) Bits() byte {
+// bits is bit value of the side.
+func (s Side) bits() byte {
 	return bits[s]
 }
 
-func (s Sock) Mask() byte {
+// mask is bitmask which is used to check for side matching.
+func (s Side) mask() byte {
 	return masks[s]
 }
 
-func (s Sock) Match(x Sock) bool {
-	return (s.Bits() & x.Mask() != 0)
+// Match is to check if a side match another.
+func (s Side) Match(x Side) bool {
+	return (s.bits() & x.mask() != 0)
 }
 
-func NewBlock(input ...byte) *Block {
+// block is (north, east, west, south)
+type Block struct {
+	Sides [4]Side
+}
+
+// NewBlock creates a new block from N, E, S, W
+func NewBlock(n, e, s, w Side) *Block {
 	b := &Block{}
-	for i := 0; i < len(b.Sock); i++ {
-		b.Sock[i] = Sock(input[i])
-	}
+	b.Sides[0] = n
+	b.Sides[1] = e
+	b.Sides[2] = s
+	b.Sides[3] = w
 	return b
 }
 
-func (b *Block) CanJoin(x *Block, dir int) bool {
+func (b *Block) String() string {
+	return fmt.Sprintf("%s,%s,%s,%s", b.Sides[0], b.Sides[1], b.Sides[2], b.Sides[3])
+}
+
+func (b *Block) EqualTo(x *Block) bool {
+	return b.Sides == x.Sides
+}
+
+// Match is to test if block matches another on direction dir
+func (b *Block) Match(x *Block, dir int) bool {
 	if x == nil || b == nil {
 		return true
 	}
-	return b.Sock[dir].Match(x.Sock[S-dir])
+	return b.Sides[dir].Match(x.Sides[(dir + 2) & 0x3])
+}
+
+// Turn is to create a block, turned 90 \grad n times clockwise.
+func (b *Block) Turn(times int) *Block {
+	x := &Block{}
+	for i := 0; i < 4; i++ {
+		x.Sides[(i+times) & 3] = b.Sides[i]
+	}
+	return x
 }
