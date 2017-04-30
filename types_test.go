@@ -6,7 +6,7 @@ import (
 
 func TestSock(t *testing.T) {
 	names := [...]string{
-		"AC", "NC", "RH", "RT", "YH", "YT", "GH", "GT",
+		"ML", "NC", "RH", "RT", "YH", "YT", "GH", "GT",
 	}
 	for i := 0; i < 8; i++ {
 		s := Side(i)
@@ -37,9 +37,9 @@ func TestMasks(t *testing.T) {
 			if si.Match(sj) != sj.Match(si) {
 				t.Errorf("non-communicative match %v %v", si, sj)
 			}
-			if i == AC || j == AC {
-				if !r {
-					t.Errorf("cannot match %v %v", si, sj)
+			if i == ML || j == ML {
+				if r {
+					t.Errorf("wrong match %v %v", si, sj)
 				}
 				continue
 			}
@@ -63,9 +63,9 @@ func TestMasks(t *testing.T) {
 }
 
 func TestBlock(t *testing.T) {
-	b := NewBlock(AC,NC,RH,GH)
-	if bs := b.String(); bs != "AC,NC,RH,GH" {
-		t.Errorf("block String() method is broken: %s", bs);
+	b := NewBlock(ML, NC, RH, GH)
+	if bs := b.String(); bs != "ML,NC,RH,GH" {
+		t.Errorf("block String() method is broken: %s", bs)
 	}
 	if !b.EqualTo(b) {
 		t.Errorf("block is not equal to itself %v", b)
@@ -76,18 +76,18 @@ func TestBlock(t *testing.T) {
 	if bx := b.Turn(1); b.EqualTo(bx) {
 		t.Errorf("blocks are wrongly equal %v %v", b, bx)
 	}
-	if bx := b.Turn(1); !bx.EqualTo(NewBlock(GH,AC,NC,RH)) {
+	if bx := b.Turn(1); !bx.EqualTo(NewBlock(GH, ML, NC, RH)) {
 		t.Errorf("invalid turn 1: %v", bx)
 	}
-	if bx := b.Turn(2); !bx.EqualTo(NewBlock(RH,GH,AC,NC)) {
+	if bx := b.Turn(2); !bx.EqualTo(NewBlock(RH, GH, ML, NC)) {
 		t.Errorf("invalid turn 2: %v", bx)
 	}
-	if bx := b.Turn(3); !bx.EqualTo(NewBlock(NC,RH,GH,AC)) {
+	if bx := b.Turn(3); !bx.EqualTo(NewBlock(NC, RH, GH, ML)) {
 		t.Errorf("invalid turn 3: %v", bx)
 	}
-	b2 := NewBlock(RT,GT,AC,NC)
-	if !b.Match(b2, N) {
-		t.Errorf("cannot match %v %v", b, b2)
+	b2 := NewBlock(RT, GT, ML, NC)
+	if b.Match(b2, N) {
+		t.Errorf("wrong match %v %v", b, b2)
 	}
 	if !b.Match(b2, E) {
 		t.Errorf("cannot match %v %v", b, b2)
@@ -98,9 +98,9 @@ func TestBlock(t *testing.T) {
 	if !b.Match(b2, W) {
 		t.Errorf("cannot match %v %v", b, b2)
 	}
-	b2 = NewBlock(NC,RT,GT,YT)
-	if !b.Match(b2, N) {
-		t.Errorf("cannot match %v %v", b, b2)
+	b2 = NewBlock(NC, RT, GT, YT)
+	if b.Match(b2, N) {
+		t.Errorf("wrong match %v %v", b, b2)
 	}
 	if b.Match(b2, E) {
 		t.Errorf("wrong match %v %v", b, b2)

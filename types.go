@@ -6,9 +6,9 @@ import (
 
 // Side colors
 const (
-	AC = iota  // any color, match anything
-	NC         // no color, match only itself
-	RH         // red head
+	ML = iota // no match at all (middle line)
+	NC        // no color, match only itself
+	RH        // red head
 	RT
 	YH
 	YT
@@ -27,36 +27,36 @@ const (
 
 // internal bits
 const (
-	banys = 1 << iota
-	bnone
-	bredh
-	bredt
-	byelh
-	byelt
-	bgrnh
-	bgrnt
+	bno = 1 << iota
+	bnc
+	brh
+	brt
+	byh
+	byt
+	bgh
+	bgt
 )
 
 // Side is the state of the side of the block
 type Side byte
 
-var bits = [...]byte {
-	banys, bnone, bredh, bredt, byelh, byelt, bgrnh, bgrnt,
+var bits = [...]byte{
+	bno, bnc, brh, brt, byh, byt, bgh, bgt,
 }
 
 var sockNames = [...]string{
-	"AC", "NC", "RH", "RT", "YH", "YT", "GH", "GT",
+	"ML", "NC", "RH", "RT", "YH", "YT", "GH", "GT",
 }
 
-var masks = map[Side]byte {
-	AC: banys | bnone | bredh | bredt | byelh | byelt | bgrnh | bgrnt,
-	NC: banys | bnone,
-	RH: banys | bredt,
-	RT: banys | bredh,
-	YH: banys | byelt,
-	YT: banys | byelh,
-	GH: banys | bgrnt,
-	GT: banys | bgrnh,
+var masks = map[Side]byte{
+	ML: 0,
+	NC: bnc,
+	RH: brt,
+	RT: brh,
+	YH: byt,
+	YT: byh,
+	GH: bgt,
+	GT: bgh,
 }
 
 // String is the string representation of Side.
@@ -76,7 +76,7 @@ func (s Side) mask() byte {
 
 // Match is to check if a side match another.
 func (s Side) Match(x Side) bool {
-	return (s.bits() & x.mask() != 0)
+	return (s.bits()&x.mask() != 0)
 }
 
 // block is (north, east, west, south)
@@ -107,14 +107,20 @@ func (b *Block) Match(x *Block, dir int) bool {
 	if x == nil || b == nil {
 		return true
 	}
-	return b.Sides[dir].Match(x.Sides[(dir + 2) & 0x3])
+	return b.Sides[dir].Match(x.Sides[(dir+2)&0x3])
 }
 
 // Turn is to create a block, turned 90 \grad n times clockwise.
 func (b *Block) Turn(times int) *Block {
 	x := &Block{}
 	for i := 0; i < 4; i++ {
-		x.Sides[(i+times) & 3] = b.Sides[i]
+		x.Sides[(i+times)&3] = b.Sides[i]
 	}
 	return x
+}
+
+type Tile struct {
+	A   *Block
+	B   *Block
+	Dir int // direction a to b
 }
