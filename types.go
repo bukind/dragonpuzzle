@@ -119,8 +119,25 @@ func (b *Block) Turn(times int) *Block {
 	return x
 }
 
+// Tile is a tile containing two blocks.
+// The tile may be in 4 orientations given by Dir from A to B.
 type Tile struct {
 	A   *Block
 	B   *Block
 	Dir int // direction a to b
+}
+
+// NewTile creates a tile.
+func NewTile(n, e1, e2, s, w2, w1 Side, dir int) *Tile {
+	t := &Tile{}
+	t.A = NewBlock(n, e1, ML, w1)
+	t.B = NewBlock(ML, e2, s, w2)
+	t.Dir = S
+	return t.Turn(dir)
+}
+
+// Turn turns the tile.
+func (t *Tile) Turn(dir int) *Tile {
+	// TODO: fix this
+	return nil
 }
