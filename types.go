@@ -21,8 +21,8 @@ const (
 const (
 	N = iota
 	E
-	W
 	S
+	W
 )
 
 // internal bits
@@ -36,6 +36,24 @@ const (
 	bgh
 	bgt
 )
+
+// Dir is direction such as N, E, S, W
+type Dir byte
+
+// String is rep for direction.
+func (d Dir) String() string {
+	return "NESW"[d : d+1]
+}
+
+// Turn is to turn direction n times 90 degrees clockwise.
+func (d Dir) Turn(n int) Dir {
+	return Dir((int(d) + n) & 0x3)
+}
+
+// Return the number of rotations to do to turn x into d.
+func (d Dir) Diff(x Dir) int {
+	return int(d) + 4 - int(x)
+}
 
 // Side is the state of the side of the block
 type Side byte
@@ -87,15 +105,15 @@ type Block struct {
 // NewBlock creates a new block from N, E, S, W
 func NewBlock(n, e, s, w Side) *Block {
 	b := &Block{}
-	b.Sides[0] = n
-	b.Sides[1] = e
-	b.Sides[2] = s
-	b.Sides[3] = w
+	b.Sides[N] = n
+	b.Sides[E] = e
+	b.Sides[S] = s
+	b.Sides[W] = w
 	return b
 }
 
 func (b *Block) String() string {
-	return fmt.Sprintf("%s,%s,%s,%s", b.Sides[0], b.Sides[1], b.Sides[2], b.Sides[3])
+	return fmt.Sprintf("%s,%s,%s,%s", b.Sides[N], b.Sides[E], b.Sides[S], b.Sides[W])
 }
 
 func (b *Block) EqualTo(x *Block) bool {
@@ -103,18 +121,19 @@ func (b *Block) EqualTo(x *Block) bool {
 }
 
 // Match is to test if block matches another on direction dir
-func (b *Block) Match(x *Block, dir int) bool {
+func (b *Block) Match(x *Block, dir Dir) bool {
 	if x == nil || b == nil {
 		return true
 	}
-	return b.Sides[dir].Match(x.Sides[(dir+2)&0x3])
+	return b.Sides[dir].Match(x.Sides[dir.Turn(2)])
 }
 
-// Turn is to create a block, turned 90 \grad n times clockwise.
-func (b *Block) Turn(times int) *Block {
+// Turn is to create a block, turned n times 90 degrees clockwise.
+func (b *Block) Turn(n int) *Block {
 	x := &Block{}
 	for i := 0; i < 4; i++ {
-		x.Sides[(i+times)&3] = b.Sides[i]
+		d := Dir(i)
+		x.Sides[d.Turn(n)] = b.Sides[d]
 	}
 	return x
 }
@@ -124,20 +143,20 @@ func (b *Block) Turn(times int) *Block {
 type Tile struct {
 	A   *Block
 	B   *Block
-	Dir int // direction a to b
+	Dir Dir // direction from a to b
 }
 
 // NewTile creates a tile.
-func NewTile(n, e1, e2, s, w2, w1 Side, dir int) *Tile {
-	t := &Tile{}
-	t.A = NewBlock(n, e1, ML, w1)
-	t.B = NewBlock(ML, e2, s, w2)
-	t.Dir = S
-	return t.Turn(dir)
+func NewTile(n, e1, e2, s, w2, w1 Side, dir Dir) *Tile {
+	t := &Tile{
+		A:   NewBlock(n, e1, ML, w1),
+		B:   NewBlock(ML, e2, s, w2),
+		Dir: S,
+	}
+	return t.Turn(dir.Diff(t.Dir))
 }
 
 // Turn turns the tile.
-func (t *Tile) Turn(dir int) *Tile {
-	// TODO: fix this
-	return nil
+func (t *Tile) Turn(n int) *Tile {
+	return &Tile{t.A.Turn(n), t.B.Turn(n), t.Dir.Turn(n)}
 }

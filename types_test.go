@@ -4,6 +4,28 @@ import (
 	"testing"
 )
 
+func TestDir(t *testing.T) {
+	chk := func(x int, d Dir, s string, d1 Dir, d3 Dir) {
+		if Dir(x) != d {
+			t.Errorf("invalid Dir(%d), must be %v", x, d)
+		}
+		if d.String() != s {
+			t.Errorf("invalid d.String() == %q, must be %q", d.String(), s)
+		}
+		if dx := d.Turn(1); dx != d1 {
+			t.Errorf("invalid d(%v).Turn(1) = %v, must be %v", d, dx, d1)
+		}
+		if dx := d.Turn(3); dx != d3 {
+			t.Errorf("invalid d(%v).Turn(3) = %v, must be %v", d, dx, d3)
+		}
+	}
+
+	chk(0, N, "N", E, W)
+	chk(1, E, "E", S, N)
+	chk(2, S, "S", W, E)
+	chk(3, W, "W", N, S)
+}
+
 func TestSock(t *testing.T) {
 	names := [...]string{
 		"ML", "NC", "RH", "RT", "YH", "YT", "GH", "GT",
@@ -110,5 +132,28 @@ func TestBlock(t *testing.T) {
 	}
 	if b.Match(b2, W) {
 		t.Errorf("cannot match %v %v", b, b2)
+	}
+}
+
+func TestTile(t *testing.T) {
+	x := NewTile(NC, RH, RT, YH, YT, GH, S)
+	if !x.A.EqualTo(NewBlock(NC, RH, ML, GH)) {
+		t.Errorf("broken tile ctor #1")
+	}
+	if !x.B.EqualTo(NewBlock(ML, RT, YH, YT)) {
+		t.Errorf("broken tile ctor #2")
+	}
+	if x.Dir != S {
+		t.Errorf("broken tile ctor #3")
+	}
+	x = x.Turn(2)
+	if !x.A.EqualTo(NewBlock(ML, GH, NC, RH)) {
+		t.Errorf("broken tile turn #1")
+	}
+	if !x.B.EqualTo(NewBlock(YH, YT, ML, RT)) {
+		t.Errorf("broken tile turn #2")
+	}
+	if x.Dir != N {
+		t.Errorf("broken tile turn #3")
 	}
 }
