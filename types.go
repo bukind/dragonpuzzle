@@ -143,7 +143,7 @@ func (b *Block) Turn(n int) *Block {
 type Tile struct {
 	A   *Block
 	B   *Block
-	Dir Dir // direction from a to b
+	Dir Dir // direction from b to a
 }
 
 // NewTile creates a tile.
@@ -151,7 +151,7 @@ func NewTile(n, e1, e2, s, w2, w1 Side, dir Dir) *Tile {
 	t := &Tile{
 		A:   NewBlock(n, e1, ML, w1),
 		B:   NewBlock(ML, e2, s, w2),
-		Dir: S,
+		Dir: N,
 	}
 	return t.Turn(dir.Diff(t.Dir))
 }

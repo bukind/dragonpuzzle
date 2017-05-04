@@ -136,14 +136,14 @@ func TestBlock(t *testing.T) {
 }
 
 func TestTile(t *testing.T) {
-	x := NewTile(NC, RH, RT, YH, YT, GH, S)
+	x := NewTile(NC, RH, RT, YH, YT, GH, N)
 	if !x.A.EqualTo(NewBlock(NC, RH, ML, GH)) {
 		t.Errorf("broken tile ctor #1")
 	}
 	if !x.B.EqualTo(NewBlock(ML, RT, YH, YT)) {
 		t.Errorf("broken tile ctor #2")
 	}
-	if x.Dir != S {
+	if x.Dir != N {
 		t.Errorf("broken tile ctor #3")
 	}
 	x = x.Turn(2)
@@ -153,7 +153,7 @@ func TestTile(t *testing.T) {
 	if !x.B.EqualTo(NewBlock(YH, YT, ML, RT)) {
 		t.Errorf("broken tile turn #2")
 	}
-	if x.Dir != N {
+	if x.Dir != S {
 		t.Errorf("broken tile turn #3")
 	}
 }
