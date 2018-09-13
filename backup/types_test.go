@@ -1,4 +1,4 @@
-package dragonpuzzle
+package dragonpuzzle_
 
 import (
 	"testing"
