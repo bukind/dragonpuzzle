@@ -4,9 +4,6 @@ import (
 	"fmt"
 )
 
-
-type BlankT int
-
 const (
 	BLANK = Color(iota)
 	RED
@@ -30,10 +27,61 @@ type HT struct {
 // Track is a part of a dragon of certain color.
 type Track struct {
 	Col   Color
-	Heads byte
-	Tails byte
+	Count HT
 	Ends  byte
 }
+
+// Tile is the tile description.
+type Tile struct {
+	Ends   []End
+	Cells  []XY
+	Tracks []*Track
+}
+
+var (
+	// Head helper
+	H = HT{1, 0}
+	// Tail helper
+	T = HT{0, 1}
+
+	colorToString = map[Color]string{
+		BLANK: "blank",
+		RED: "red",
+		GREEN: "green",
+		YELLOW: "yellow",
+	}
+)
+
+func (c Color) IsValid() bool {
+	if c < BLANK || c > YELLOW {
+		return false
+	}
+	return true
+}
+
+func (c Color) String() string {
+	return colorToString[c]
+}
+
+func (e End) String() string {
+	return fmt.Sprintf("trk#%d@%v", e.Track, e.Pos)
+}
+
+func (h HT) String() string {
+	return fmt.Sprintf("%.*s%.*s", h.Heads, "HHHHHHHH", h.Tails, "TTTTTTTT")
+}
+
+func (h *HT) Merge(hts ...HT) {
+	for _, ht := range hts {
+		h.Heads += ht.Heads
+		h.Tails += ht.Tails
+	}
+}
+
+func (t *Track) String() string {
+	return fmt.Sprintf("Trk(%s, %s%.*s)", t.Col, t.Count, t.Ends, "EEEEEEEE")
+}
+
 func Green(hts ...HT) *Track {
 	return NewTrack(GREEN, hts...)
 }
@@ -44,28 +92,33 @@ func Yellow(hts ...HT) *Track {
 	return NewTrack(YELLOW, hts...)
 }
 
-var H = HT{1, 0}
-var T = HT{0, 1}
-
 func NewTrack(c Color, hts ...HT) *Track {
 	t := &Track{}
-	t.Col = c
-	for _, x := range hts {
-		t.Heads += x.Heads
-		t.Tails += x.Tails
+	if !c.IsValid() {
+		panic(fmt.Sprintf("invalid color %d"))
 	}
+	t.Col = c
+	t.Count.Merge(hts...)
 	return t
 }
 
-// Tile is the tile description.
-type Tile struct {
-	Ends []End
-	Tracks []*Track
+func (t *Tile) String() string {
+	return fmt.Sprintf("Tile(ends:%v cells:%v trks:%v)", t.Ends, t.Cells, t.Tracks)
+}
+
+func (t *Tile) Turn(steps int) {
+	for i := range t.Ends {
+		t.Ends[i].Pos.Turn(steps)
+	}
+	for i := range t.Cells {
+		t.Cells[i].Turn(steps)
+	}
 }
 
 func NewTile(ends []byte, ts ...*Track) (*Tile, error) {
 	tile := &Tile{
 		Ends: make([]End, 6),
+		Cells: append([]XY{}, InitialTileCenters...),
 		Tracks: append([]*Track{&Track{Col:BLANK}}, ts...),
 	}
 	if len(ends) != len(tile.Ends) {
@@ -77,7 +130,7 @@ func NewTile(ends []byte, ts ...*Track) (*Tile, error) {
 		}
 		tile.Ends[i].Track = end
 		tile.Tracks[end].Ends++
-		tile.Ends[i].Pos = TilePos[i]
+		tile.Ends[i].Pos = InitialTileEnds[i]
 	}
 	return tile, nil
 }
