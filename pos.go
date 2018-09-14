@@ -8,6 +8,12 @@ type XY struct {
 	Y int8
 }
 
+type XYList []XY
+
+func (x XY) Equal(y XY) bool {
+	return x.X == y.X && x.Y == y.Y
+}
+
 func (x *XY) Turn(steps int) {
 	switch steps {
 	case 0:
@@ -23,6 +29,17 @@ func (x *XY) Turn(steps int) {
 	}
 }
 
+func (x XYList) HasMatch(y XYList) bool {
+	for _, a := range x {
+		for _, b := range y {
+			if a.X == b.X && a.Y == b.Y {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 var (
 	// Y
 	//
@@ -35,7 +52,7 @@ var (
 	// +-- 0 1 2 3 4 --> X
 
 	// Initial tile ends positions.
-	InitialTileEnds = []XY{
+	InitialTileEnds = XYList{
 		XY{0, 1},
 		XY{1, 2},
 		XY{3, 2},
@@ -44,7 +61,7 @@ var (
 		XY{1, 0},
 	}
 	// Initial tile centers.
-	InitialTileCenters = []XY{
+	InitialTileCenters = XYList{
 		XY{1, 1},
 		XY{3, 1},
 	}
