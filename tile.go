@@ -147,3 +147,35 @@ func NewTile(ends []byte, ts ...*Track) (*Tile, error) {
 	}
 	return tile, nil
 }
+
+func (t *Tile) Join(v *Tile) (*Tile, error) {
+	// validation
+	if t.Cells.HasMatch(v.Cells) {
+		return nil, fmt.Errorf("the cells %v and %v overlap", t.Cells, v.Cells)
+	}
+	type pair struct{i, j int}
+	var matches []pair
+	for i, x := range t.Ends {
+		for j, y := range v.Ends {
+			if x.Pos.Equal(y.Pos) {
+				col1 := t.Tracks[x.Track].Col
+				col2 := v.Tracks[y.Track].Col
+				if col1 != col2 {
+					return nil, fmt.Errorf("track colors don't match (%s vs %s) at %s", col1, col2, x.Pos)
+				}
+				matches = append(matches, pair{i, len(t.Ends)+j})
+				break
+			}
+		}
+	}
+	if len(matches) == 0 {
+		return nil, fmt.Errorf("tracks have no matches")
+	}
+	u := &Tile{
+		Ends: append(append([]End(nil), t.Ends...), v.Ends...),
+		Cells: append(append(XYList(nil), t.Cells...), v.Cells...),
+		Tracks: append(t.Tracks.Clone(), v.Tracks.Clone()...),
+	}
+	// TODO(bukind): merge matching ends
+	return u, nil
+}
