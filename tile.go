@@ -31,11 +31,13 @@ type Track struct {
 	Ends  byte
 }
 
+type TrackList []*Track
+
 // Tile is the tile description.
 type Tile struct {
 	Ends   []End
-	Cells  []XY
-	Tracks []*Track
+	Cells  XYList
+	Tracks TrackList
 }
 
 var (
@@ -51,13 +53,6 @@ var (
 		YELLOW: "yellow",
 	}
 )
-
-func (c Color) IsValid() bool {
-	if c < BLANK || c > YELLOW {
-		return false
-	}
-	return true
-}
 
 func (c Color) String() string {
 	return colorToString[c]
@@ -82,6 +77,19 @@ func (t *Track) String() string {
 	return fmt.Sprintf("Trk(%s, %s%.*s)", t.Col, t.Count, t.Ends, "EEEEEEEE")
 }
 
+func (t *Track) Equal(trk *Track) bool {
+	if t.Col != trk.Col {
+		return false
+	}
+	if t.Count != trk.Count {
+		return false
+	}
+	if t.Ends != trk.Ends {
+		return false
+	}
+	return true
+}
+
 func Green(hts ...HT) *Track {
 	return NewTrack(GREEN, hts...)
 }
@@ -94,12 +102,17 @@ func Yellow(hts ...HT) *Track {
 
 func NewTrack(c Color, hts ...HT) *Track {
 	t := &Track{}
-	if !c.IsValid() {
-		panic(fmt.Sprintf("invalid color %d"))
-	}
 	t.Col = c
 	t.Count.Merge(hts...)
 	return t
+}
+
+func (t TrackList) Clone() TrackList {
+	var res TrackList
+	for _, x := range t {
+		res = append(res, &Track{x.Col, x.Count, x.Ends})
+	}
+	return res
 }
 
 func (t *Tile) String() string {
@@ -118,8 +131,8 @@ func (t *Tile) Turn(steps int) {
 func NewTile(ends []byte, ts ...*Track) (*Tile, error) {
 	tile := &Tile{
 		Ends: make([]End, 6),
-		Cells: append([]XY{}, InitialTileCenters...),
-		Tracks: append([]*Track{&Track{Col:BLANK}}, ts...),
+		Cells: append(XYList{}, InitialTileCenters...),
+		Tracks: append(TrackList{&Track{}}, ts...),
 	}
 	if len(ends) != len(tile.Ends) {
 		return nil, fmt.Errorf("wrong number of ends %d", len(ends))
